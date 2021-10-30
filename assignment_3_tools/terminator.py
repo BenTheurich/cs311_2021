@@ -11,54 +11,63 @@ args = parser.parse_args()
 
 f = open("tData.json")
 
+#load data from json file into a python dict called data
 data = json.load(f)
 
 #booleans to check if we identify the opponent's algorithm
-algo_check_1 = false
-algo_check_2 = false
-
-
-print(data)
+algo_check_1 = False
 
 #if it is the first round, initialize a bunch of stuff
 if args.init == "true":
     data["num_rounds"] = args.iterations
     data["current_round"] = 0
     data["opp_prev_moves"] = []
+    data["algo_detected"] = False
+    data["next_moves"] = []
 else:
     data["opp_prev_moves"].append(args.last_opponent_move)
 
-for i in range(0:len(data["opp_prev_moves"]):2):
-    if data["opp_prev_moves"][i] == "confess":
-        algo_check_1 = true
+if data["algo_detected"] == False:
+    #scan opponent previous even moves to see if they are all confess
+    for i in range(0, len(data["opp_prev_moves"]) - 1, 2):
+        if data["opp_prev_moves"][i] == data["opp_prev_moves"][i+1]:
+            algo_check_1 = False
+            break
+        else:
+            algo_check_1 = True
 
-for i in range(1:len(data["opp_prev_moves"]):2):
-d    if data["opp_prev_moves"][i] == "silent":
-        algo_check_2 = true
+#if true, then the other algorithim is simply switching back and forth
+if algo_check_1:
+    data["algo_detected"] = True;
+    for i in range(5):
+        data["next_moves"].append("confess") #push 5 confess to the stack
 
-if algo_check_1 and algo_check_2:
-    data["algo_detected"] = true;
-    for i in range(0:4:):
-        data["next_moves"].push("confess")
-
+#if there are more than 10 previous opponent moves in the list, take away the oldest one
 if len(data["opp_prev_moves"]) > 10:
     data["opp_prev_moves"].pop(0)
 
-if data["algo_detected"]:
-    print(data["next_moves"].pop())
+#what to return
+if args.last_opponent_move == "zero":
+    print("silent")
+elif data["current_round"] + 1 == int(data["num_rounds"]):
+    print("confess")
 else:
-    if args.last_opponent_move == "zero":
-        print("silent")
+    if data["algo_detected"]:
+        print(data["next_moves"].pop())
     else:
         print(args.last_opponent_move)
 
+#once the stack is empty, start trying to detect opponent algorithm again
 if len(data["next_moves"]) == 0:
-    data["algo_detected"] = false
+    data["algo_detected"] = False
 
+#increase round counter by 1
+if args.init != "true":
+    data["current_round"] += 1
 
-
-data["current_round"] += 1
-
+#update json file with updated dict
 with open("tData.json", "w") as outfile:
     json.dump(data, outfile)
 
+#for testing
+print(data)

@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #print(args.last_opponent_move)
+    print(args.last_opponent_move)
 
     print( random.choice(['confess', 'silent']) )
     
